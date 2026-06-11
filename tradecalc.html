@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TradeCalc">
+  <meta name="theme-color" content="#0b0e14">
+  <title>TradeCalc</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: #0b0e14; color: #e2e8f0; font-family: -apple-system, 'Segoe UI', sans-serif; }
+    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+    #app { max-width: 480px; margin: 0 auto; padding: 20px 14px 60px; }
+
+    /* Header */
+    .header { margin-bottom: 20px; }
+    .header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+    .header-badge { font-size: 10px; background: #1a2d4a; color: #3b82f6; border-radius: 5px; padding: 3px 8px; font-weight: 700; letter-spacing: 1px; }
+    .header-sub { color: #5a6a7e; font-size: 12px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; background: #141921; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; background: transparent; color: #5a6a7e; border: none; border-radius: 9px; padding: 11px 0; cursor: pointer; font-weight: 700; font-size: 14px; font-family: inherit; transition: all .15s; }
+    .tab-btn.active { background: #3b82f6; color: #fff; }
+
+    /* Cards */
+    .card { background: #141921; border: 1px solid #1e2d40; border-radius: 14px; padding: 18px 16px; margin-bottom: 0; }
+    .card-title { font-weight: 700; font-size: 14px; margin-bottom: 14px; color: #e2e8f0; }
+    .section { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Direction buttons */
+    .dir-row { display: flex; gap: 10px; }
+    .dir-btn { flex: 1; background: #141921; color: #5a6a7e; border: 2px solid #1e2d40; border-radius: 12px; padding: 14px 0; cursor: pointer; font-weight: 800; font-size: 15px; font-family: inherit; transition: all .15s; }
+    .dir-btn.long.active { background: #0d3d2e; color: #00e676; border-color: #00e676; }
+    .dir-btn.short.active { background: #3d0d0d; color: #ff5252; border-color: #ff5252; }
+
+    /* Form */
+    label { font-size: 12px; color: #5a6a7e; margin-bottom: 6px; display: block; font-weight: 600; letter-spacing: 0.5px; }
+    input, select { background: #1a2130; border: 1px solid #1e2d40; border-radius: 10px; color: #e2e8f0; padding: 13px 14px; font-size: 16px; width: 100%; outline: none; font-family: inherit; -webkit-appearance: none; appearance: none; }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6a7e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: left 14px center; padding-left: 36px; }
+    .field { display: flex; flex-direction: column; }
+    .fields-grid { display: flex; flex-direction: column; gap: 14px; }
+    .tp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Result rows */
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #1a2130; border-radius: 9px; }
+    .result-label { font-size: 13px; color: #5a6a7e; }
+    .result-val { font-size: 15px; font-weight: 700; color: #e2e8f0; }
+    .result-val.green { color: #00e676; }
+    .result-val.red { color: #ff5252; }
+
+    /* TP row */
+    .tp-row { display: flex; justify-content: space-between; align-items: center; background: #1a2130; border-radius: 9px; padding: 10px 12px; }
+    .tp-label { font-weight: 700; color: #3b82f6; font-size: 13px; min-width: 36px; }
+    .tp-price { font-size: 13px; color: #94a3b8; }
+    .tp-profit { font-size: 13px; color: #00e676; font-weight: 600; }
+    .tp-rr { font-size: 14px; font-weight: 800; }
+    .tp-rr.good { color: #00e676; }
+    .tp-rr.ok { color: #ffd740; }
+    .tp-rr.bad { color: #ff5252; }
+
+    /* Warnings */
+    .warn-card { background: #1a1209; border: 1px solid #5a3010; border-radius: 14px; padding: 18px 16px; }
+    .warn-title { font-weight: 700; font-size: 14px; margin-bottom: 12px; color: #ffd740; }
+    .warn-item { background: #231a0a; border: 1px solid #4a3010; border-radius: 9px; padding: 10px 12px; color: #ffd740; font-size: 13px; line-height: 1.5; margin-bottom: 8px; }
+    .warn-item:last-child { margin-bottom: 0; }
+
+    /* Badge */
+    .badge { border-radius: 4px; padding: 2px 9px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+    .badge.long { background: #0d3d2e; color: #00e676; border: 1px solid #00e676; }
+    .badge.short { background: #3d0d0d; color: #ff5252; border: 1px solid #ff5252; }
+
+    /* Save button */
+    .save-btn { width: 100%; background: #3b82f6; color: #fff; border: none; border-radius: 12px; padding: 15px 0; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; transition: all .2s; }
+    .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .save-btn.saved { background: #0d3d2e; color: #00e676; }
+    .save-hint { text-align: center; color: #5a6a7e; font-size: 12px; margin-top: 8px; }
+
+    /* Journal stats */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+    .stat-box { background: #1a2130; border-radius: 9px; padding: 10px 6px; text-align: center; }
+    .stat-label { font-size: 10px; color: #5a6a7e; margin-bottom: 4px; }
+    .stat-val { font-size: 18px; font-weight: 800; }
+
+    /* Journal entry */
+    .journal-entry { background: #141921; border: 1px solid #1e2d40; border-radius: 14px; padding: 16px; position: relative; }
+    .entry-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .entry-symbol { font-weight: 800; font-size: 15px; }
+    .entry-result { font-weight: 700; font-size: 13px; }
+    .entry-date { color: #5a6a7e; font-size: 11px; margin-right: auto; }
+    .entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .entry-box { background: #1a2130; border-radius: 8px; padding: 8px 10px; }
+    .entry-box-label { font-size: 10px; color: #5a6a7e; margin-bottom: 3px; }
+    .entry-box-val { font-size: 13px; font-weight: 600; }
+    .entry-tps { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .entry-tp-tag { background: #0d2a1a; color: #00e676; border: 1px solid #1a4d2e; border-radius: 6px; padding: 3px 9px; font-size: 12px; }
+    .entry-note { margin-top: 10px; color: #94a3b8; font-size: 13px; border-top: 1px solid #1e2d40; padding-top: 10px; line-height: 1.5; }
+    .delete-btn { position: absolute; top: 12px; left: 12px; background: transparent; border: none; color: #5a6a7e; cursor: pointer; font-size: 18px; padding: 4px; }
+
+    /* Empty state */
+    .empty { text-align: center; padding: 48px 20px; }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-text { color: #5a6a7e; font-size: 14px; }
+    .empty-sub { color: #5a6a7e; font-size: 12px; margin-top: 6px; }
+
+    .hidden { display: none !important; }
+    .flex-col-gap { display: flex; flex-direction: column; gap: 14px; }
+    .mb12 { margin-bottom: 12px; }
+    .mb14 { margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <span class="header-title">TradeCalc</span>
+      <span class="header-badge">FUTURES</span>
+    </div>
+    <p class="header-sub">محاسبه‌گر پوزیشن و ژورنال معاملات</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-calc-btn" onclick="switchTab('calc')">محاسبه‌گر</button>
+    <button class="tab-btn" id="tab-journal-btn" onclick="switchTab('journal')">ژورنال</button>
+  </div>
+
+  <!-- CALC TAB -->
+  <div id="tab-calc" class="section">
+    <!-- Direction -->
+    <div class="dir-row">
+      <button class="dir-btn long active" id="btn-long" onclick="setDirection('long')">▲ Long</button>
+      <button class="dir-btn short" id="btn-short" onclick="setDirection('short')">▼ Short</button>
+    </div>
+
+    <!-- Inputs -->
+    <div class="card">
+      <div class="fields-grid">
+        <div class="field"><label>نماد</label><input type="text" inputmode="text" id="f-symbol" placeholder="BTCUSDT" oninput="calc()"></div>
+        <div class="field"><label>سرمایه حساب ($)</label><input type="number" inputmode="decimal" id="f-capital" placeholder="1000" oninput="calc()"></div>
+        <div class="field"><label>ریسک دلاری ($)</label><input type="number" inputmode="decimal" id="f-risk" placeholder="25" oninput="calc()"></div>
+        <div class="field"><label>لوریج (x)</label><input type="number" inputmode="decimal" id="f-leverage" placeholder="10" oninput="calc()"></div>
+        <div class="field"><label>قیمت ورود</label><input type="number" inputmode="decimal" id="f-entry" placeholder="65000" oninput="calc()"></div>
+        <div class="field"><label>استاپ لاس</label><input type="number" inputmode="decimal" id="f-sl" placeholder="63500" oninput="calc()"></div>
+      </div>
+    </div>
+
+    <!-- TPs -->
+    <div class="card">
+      <div class="card-title">تارگت‌ها</div>
+      <div class="tp-grid">
+        <div class="field"><label>TP1</label><input type="number" inputmode="decimal" id="tp1" placeholder="قیمت" oninput="calc()"></div>
+        <div class="field"><label>TP2</label><input type="number" inputmode="decimal" id="tp2" placeholder="قیمت" oninput="calc()"></div>
+        <div class="field"><label>TP3</label><input type="number" inputmode="decimal" id="tp3" placeholder="قیمت" oninput="calc()"></div>
+        <div class="field"><label>TP4</label><input type="number" inputmode="decimal" id="tp4" placeholder="قیمت" oninput="calc()"></div>
+        <div class="field"><label>TP5</label><input type="number" inputmode="decimal" id="tp5" placeholder="قیمت" oninput="calc()"></div>
+        <div class="field"><label>TP6</label><input type="number" inputmode="decimal" id="tp6" placeholder="قیمت" oninput="calc()"></div>
+      </div>
+    </div>
+
+    <!-- Results (hidden until calc) -->
+    <div id="results-section" class="hidden section">
+      <!-- Main results -->
+      <div class="card">
+        <div class="card-title" id="results-title">نتایج</div>
+        <div id="results-rows" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+      <!-- TP table -->
+      <div class="card hidden" id="tp-results-card">
+        <div class="card-title">جدول تارگت‌ها</div>
+        <div id="tp-results-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+      <!-- Warnings -->
+      <div class="warn-card hidden" id="warnings-card">
+        <div class="warn-title">⚠️ هشدار</div>
+        <div id="warnings-rows"></div>
+      </div>
+      <!-- Save to journal -->
+      <div class="card">
+        <div class="card-title">ذخیره در ژورنال</div>
+        <div class="mb12">
+          <label>نتیجه معامله</label>
+          <select id="j-result">
+            <option value="open">🔄 Open</option>
+            <option value="win">✅ Win</option>
+            <option value="loss">❌ Loss</option>
+            <option value="be">➖ Break Even</option>
+          </select>
+        </div>
+        <div class="mb14">
+          <label>یادداشت (اختیاری)</label>
+          <input type="text" id="j-note" placeholder="دلیل ورود، احساسات، ...">
+        </div>
+        <button class="save-btn" id="save-btn" onclick="saveToJournal()">ذخیره در ژورنال</button>
+        <div class="save-hint hidden" id="save-hint">ابتدا نماد را وارد کنید</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOURNAL TAB -->
+  <div id="tab-journal" class="hidden flex-col-gap">
+    <div id="journal-stats" class="card hidden">
+      <div class="stats-grid" id="stats-grid"></div>
+    </div>
+    <div id="journal-empty" class="card empty">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">هنوز معامله‌ای ثبت نشده</div>
+      <div class="empty-sub">بعد از محاسبه، معامله را در ژورنال ذخیره کن</div>
+    </div>
+    <div id="journal-list" class="flex-col-gap"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'tradecalc-journal-v1';
+let direction = 'long';
+let journal = [];
+
+try { journal = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { journal = []; }
+
+function fmt(n, d=2) {
+  if (n === undefined || n === null || isNaN(n)) return '—';
+  return Number(n).toLocaleString('en-US', {minimumFractionDigits: d, maximumFractionDigits: d});
+}
+
+function setDirection(dir) {
+  direction = dir;
+  document.getElementById('btn-long').className = 'dir-btn long' + (dir==='long'?' active':'');
+  document.getElementById('btn-short').className = 'dir-btn short' + (dir==='short'?' active':'');
+  calc();
+}
+
+function getVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function getStr(id) { return document.getElementById(id).value.trim(); }
+
+function calc() {
+  const capital = getVal('f-capital');
+  const risk = getVal('f-risk');
+  const entry = getVal('f-entry');
+  const sl = getVal('f-sl');
+  const leverage = getVal('f-leverage');
+  const symbol = getStr('f-symbol');
+
+  const resultsSection = document.getElementById('results-section');
+  if (!capital || !risk || !entry || !sl || !leverage) {
+    resultsSection.classList.add('hidden');
+    return;
+  }
+  resultsSection.classList.remove('hidden');
+
+  const isLong = direction === 'long';
+  const slDist = Math.abs(entry - sl);
+  const slPct = (slDist / entry) * 100;
+  const posSize = (risk / slDist) * entry;
+  const posCoins = posSize / entry;
+  const margin = posSize / leverage;
+  const riskPct = (risk / capital) * 100;
+
+  // Main results
+  const rows = [
+    { label: 'حجم پوزیشن', val: '$' + fmt(posSize), cls: '' },
+    { label: 'حجم (کوین)', val: fmt(posCoins, 5), cls: '' },
+    { label: 'مارجین مورد نیاز', val: '$' + fmt(margin), cls: '' },
+    { label: 'فاصله استاپ', val: fmt(slPct, 2) + '%', cls: '' },
+    { label: 'حداکثر ضرر', val: '$' + fmt(risk), cls: 'red' },
+    { label: 'ریسک از سرمایه', val: fmt(riskPct, 2) + '%', cls: riskPct > 3 ? 'red' : 'green' },
+  ];
+
+  const badge = `<span class="badge ${direction}">${direction.toUpperCase()}</span>`;
+  document.getElementById('results-title').innerHTML = 'نتایج ' + badge;
+
+  document.getElementById('results-rows').innerHTML = rows.map(r =>
+    `<div class="result-row"><span class="result-label">${r.label}</span><span class="result-val ${r.cls}">${r.val}</span></div>`
+  ).join('');
+
+  // TP results
+  const tpCard = document.getElementById('tp-results-card');
+  const tpRows = [];
+  for (let i = 1; i <= 6; i++) {
+    const price = getVal('tp'+i);
+    if (!price) continue;
+    const tpDist = Math.abs(price - entry);
+    const profit = posCoins * tpDist;
+    const rr = profit / risk;
+    const rrCls = rr >= 2 ? 'good' : rr >= 1.5 ? 'ok' : 'bad';
+    tpRows.push(`<div class="tp-row">
+      <span class="tp-label">TP${i}</span>
+      <span class="tp-price">${fmt(price,2)}</span>
+      <span class="tp-profit">+$${fmt(profit)}</span>
+      <span class="tp-rr ${rrCls}">${fmt(rr,2)}R</span>
+    </div>`);
+  }
+  if (tpRows.length > 0) {
+    tpCard.classList.remove('hidden');
+    document.getElementById('tp-results-rows').innerHTML = tpRows.join('');
+  } else {
+    tpCard.classList.add('hidden');
+  }
+
+  // Warnings
+  const warns = [];
+  if (tpRows.length > 0) {
+    const firstTP = getVal('tp1');
+    if (firstTP) {
+      const rr = (posCoins * Math.abs(firstTP - entry)) / risk;
+      if (rr < 1.5) warns.push('R:R اولین تارگت زیر ۱.۵ است — ارزش ریسک دارد؟');
+    }
+  }
+  if (slPct < 0.3) warns.push('استاپ خیلی نزدیک است — خطر حذف زودهنگام پوزیشن');
+  if (leverage > 20) warns.push(`لوریج ${leverage}x بسیار بالاست — ریسک لیکوئید شدن زیاد است`);
+  if (margin > capital * 0.5) warns.push('مارجین بیش از ۵۰٪ سرمایه است — تعادل حساب در خطر است');
+  if (!isLong && sl < entry) warns.push('برای شورت، استاپ باید بالاتر از ورود باشد');
+  if (isLong && sl > entry) warns.push('برای لانگ، استاپ باید پایین‌تر از ورود باشد');
+
+  const warnCard = document.getElementById('warnings-card');
+  if (warns.length > 0) {
+    warnCard.classList.remove('hidden');
+    document.getElementById('warnings-rows').innerHTML = warns.map(w => `<div class="warn-item">⚠️ ${w}</div>`).join('');
+  } else {
+    warnCard.classList.add('hidden');
+  }
+
+  // Save button state
+  const saveBtn = document.getElementById('save-btn');
+  const saveHint = document.getElementById('save-hint');
+  if (symbol) {
+    saveBtn.disabled = false;
+    saveHint.classList.add('hidden');
+  } else {
+    saveBtn.disabled = true;
+    saveHint.classList.remove('hidden');
+  }
+}
+
+function saveToJournal() {
+  const symbol = getStr('f-symbol');
+  if (!symbol) return;
+  const tps = [];
+  for (let i = 1; i <= 6; i++) { const v = getStr('tp'+i); if(v) tps.push(v); }
+
+  const entry = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('fa-IR'),
+    symbol: symbol.toUpperCase(),
+    direction,
+    entry: getStr('f-entry'),
+    sl: getStr('f-sl'),
+    tps,
+    riskAmount: getStr('f-risk'),
+    leverage: getStr('f-leverage'),
+    result: document.getElementById('j-result').value,
+    note: getStr('j-note'),
+  };
+
+  journal.unshift(entry);
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(journal)); } catch(e) {}
+
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '✅ ذخیره شد';
+  btn.classList.add('saved');
+  document.getElementById('j-note').value = '';
+  setTimeout(() => { btn.textContent = 'ذخیره در ژورنال'; btn.classList.remove('saved'); }, 2000);
+
+  renderJournal();
+  updateJournalTab();
+}
+
+function deleteEntry(id) {
+  journal = journal.filter(e => e.id !== id);
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(journal)); } catch(e) {}
+  renderJournal();
+  updateJournalTab();
+}
+
+function renderJournal() {
+  const list = document.getElementById('journal-list');
+  const empty = document.getElementById('journal-empty');
+  const stats = document.getElementById('journal-stats');
+
+  if (journal.length === 0) {
+    empty.classList.remove('hidden');
+    stats.classList.add('hidden');
+    list.innerHTML = '';
+    return;
+  }
+  empty.classList.add('hidden');
+  stats.classList.remove('hidden');
+
+  // Stats
+  const wins = journal.filter(e => e.result === 'win').length;
+  const losses = journal.filter(e => e.result === 'loss').length;
+  const wr = ((wins / journal.length) * 100).toFixed(1);
+  const wrColor = parseFloat(wr) >= 50 ? '#00e676' : '#ff5252';
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-box"><div class="stat-label">معاملات</div><div class="stat-val" style="color:#e2e8f0">${journal.length}</div></div>
+    <div class="stat-box"><div class="stat-label">Win Rate</div><div class="stat-val" style="color:${wrColor}">${wr}%</div></div>
+    <div class="stat-box"><div class="stat-label">برد</div><div class="stat-val" style="color:#00e676">${wins}</div></div>
+    <div class="stat-box"><div class="stat-label">باخت</div><div class="stat-val" style="color:#ff5252">${losses}</div></div>
+  `;
+
+  // Entries
+  const rLabels = { win:'✅ Win', loss:'❌ Loss', be:'➖ BE', open:'🔄 Open' };
+  const rColors = { win:'#00e676', loss:'#ff5252', be:'#5a6a7e', open:'#5a6a7e' };
+  list.innerHTML = journal.map(e => `
+    <div class="journal-entry">
+      <button class="delete-btn" onclick="deleteEntry(${e.id})">✕</button>
+      <div class="entry-header">
+        <span class="entry-symbol">${e.symbol}</span>
+        <span class="badge ${e.direction}">${e.direction.toUpperCase()}</span>
+        <span class="entry-result" style="color:${rColors[e.result]||'#5a6a7e'}">${rLabels[e.result]||e.result}</span>
+        <span class="entry-date">${e.date}</span>
+      </div>
+      <div class="entry-grid">
+        <div class="entry-box"><div class="entry-box-label">ورود</div><div class="entry-box-val">${fmt(parseFloat(e.entry),2)}</div></div>
+        <div class="entry-box"><div class="entry-box-label">استاپ</div><div class="entry-box-val">${fmt(parseFloat(e.sl),2)}</div></div>
+        <div class="entry-box"><div class="entry-box-label">لوریج</div><div class="entry-box-val">${e.leverage}x</div></div>
+        <div class="entry-box"><div class="entry-box-label">ریسک</div><div class="entry-box-val">$${e.riskAmount}</div></div>
+      </div>
+      ${e.tps.length > 0 ? `<div class="entry-tps">${e.tps.map((tp,i)=>`<span class="entry-tp-tag">TP${i+1}: ${fmt(parseFloat(tp),2)}</span>`).join('')}</div>` : ''}
+      ${e.note ? `<div class="entry-note">${e.note}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function updateJournalTab() {
+  const tabJournalBtn = document.getElementById('tab-journal-btn');
+  tabJournalBtn.textContent = journal.length > 0 ? `ژورنال (${journal.length})` : 'ژورنال';
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-calc').classList.toggle('hidden', tab !== 'calc');
+  document.getElementById('tab-journal').classList.toggle('hidden', tab !== 'journal');
+  document.getElementById('tab-calc-btn').classList.toggle('active', tab === 'calc');
+  document.getElementById('tab-journal-btn').classList.toggle('active', tab === 'journal');
+}
+
+// Init
+renderJournal();
+updateJournalTab();
+</script>
+</body>
+</html>
