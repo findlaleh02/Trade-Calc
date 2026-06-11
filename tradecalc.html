@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="TradeCalc">
+  <meta name="theme-color" content="#0a0c12">
+  <title>TradeCalc</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg:     #090b10;
+      --s1:     #10141f;
+      --s2:     #161c2c;
+      --s3:     #1e2840;
+      --border: #2a3850;
+      --accent: #60a5fa;
+      --accent-dim: #172238;
+      --green:  #4ade80;
+      --green-dim: #0a2e18;
+      --red:    #fb7185;
+      --red-dim: #2e0a12;
+      --yellow: #fde047;
+      --yellow-dim: #2a1e00;
+      --text:   #f8faff;
+      --sub:    #94a3b8;
+      --muted:  #4e6080;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+
+    #app { max-width: 430px; margin: 0 auto; padding: 24px 16px 90px; min-height: 100vh; }
+
+    /* Header */
+    .hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+    .hdr-left { display: flex; align-items: baseline; gap: 8px; }
+    .hdr-title { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; color: #fff; }
+    .hdr-tag { font-size: 9px; font-weight: 800; letter-spacing: 2px; color: var(--accent); background: var(--accent-dim); border-radius: 4px; padding: 3px 7px; }
+
+    /* Tabs */
+    .tabs { display: flex; background: var(--s1); border-radius: 12px; padding: 3px; margin-bottom: 22px; border: 1px solid var(--border); }
+    .tab { flex: 1; background: transparent; color: var(--muted); border: none; border-radius: 9px; padding: 11px 0; cursor: pointer; font-weight: 700; font-size: 13px; font-family: inherit; transition: all .2s; letter-spacing: 0.3px; }
+    .tab.on { background: var(--s3); color: var(--text); }
+
+    /* Direction */
+    .dir-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .dir-btn { flex: 1; background: var(--s1); color: var(--muted); border: 1px solid var(--border); border-radius: 12px; padding: 14px 0; cursor: pointer; font-weight: 800; font-size: 14px; font-family: inherit; transition: all .2s; letter-spacing: 0.5px; }
+    .dir-btn.long.on  { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+    .dir-btn.short.on { background: var(--red-dim);   color: var(--red);   border-color: var(--red);   }
+
+    /* Card */
+    .card { background: var(--s1); border: 1px solid var(--border); border-radius: 16px; padding: 20px 16px; margin-bottom: 12px; }
+    .card-title { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: var(--sub); text-transform: uppercase; margin-bottom: 16px; }
+
+    /* Fields */
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .field-row .field { margin-bottom: 0; }
+
+    label { font-size: 11px; font-weight: 600; color: var(--sub); display: block; margin-bottom: 6px; letter-spacing: 0.3px; }
+
+    input, select {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 13px 14px;
+      font-size: 16px;
+      width: 100%;
+      outline: none;
+      font-family: 'Inter', inherit;
+      font-weight: 500;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus { border-color: var(--accent); background: var(--s3); }
+    input::placeholder { color: var(--muted); font-weight: 400; }
+
+    .risk-row { display: flex; gap: 8px; align-items: flex-end; }
+    .risk-row input { flex: 1; }
+    .risk-pill { background: var(--yellow-dim); border: 1px solid #4a3800; border-radius: 10px; padding: 13px 14px; font-size: 15px; font-weight: 800; color: var(--yellow); white-space: nowrap; min-width: 88px; text-align: center; letter-spacing: -0.3px; }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234a5a72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+    }
+
+    /* Calc button */
+    .calc-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 16px 0; font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; letter-spacing: 0.3px; transition: opacity .15s; margin-bottom: 12px; }
+    .calc-btn:active { opacity: 0.8; }
+
+    /* Results */
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--border); }
+    .result-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .result-row:first-child { padding-top: 0; }
+    .rl { font-size: 13px; color: var(--sub); font-weight: 500; }
+    .rv { font-size: 15px; font-weight: 700; color: var(--text); }
+    .rv.g { color: var(--green); }
+    .rv.r { color: var(--red); }
+    .rv.y { color: var(--yellow); }
+
+    /* TP rows */
+    .tp-row { display: flex; align-items: center; padding: 12px 14px; background: var(--s2); border-radius: 10px; margin-bottom: 8px; gap: 10px; }
+    .tp-row:last-child { margin-bottom: 0; }
+    .tp-n  { font-weight: 900; color: var(--accent); font-size: 13px; min-width: 34px; }
+    .tp-p  { font-size: 13px; color: var(--sub); flex: 1; }
+    .tp-pr { font-size: 14px; color: var(--green); font-weight: 800; white-space: nowrap; }
+    .tp-rr { font-size: 14px; font-weight: 900; min-width: 42px; text-align: right; white-space: nowrap; }
+    .tp-rr.g { color: var(--green); }
+    .tp-rr.y { color: var(--yellow); }
+    .tp-rr.r { color: var(--red); }
+
+    /* TP table header */
+    .tp-hdr { display: flex; align-items: center; padding: 0 14px 10px; gap: 10px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .tp-hdr span { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+    .tp-hdr .tph-n { min-width: 34px; }
+    .tp-hdr .tph-p { flex: 1; }
+    .tp-hdr .tph-pr { white-space: nowrap; }
+    .tp-hdr .tph-rr { min-width: 42px; text-align: right; }
+
+    /* Warnings */
+    .warn-card { background: var(--yellow-dim); border: 1px solid #3d2e00; border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+    .warn-title { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: var(--yellow); text-transform: uppercase; margin-bottom: 12px; }
+    .warn-item { font-size: 13px; color: var(--yellow); line-height: 1.6; margin-bottom: 6px; padding-left: 16px; position: relative; }
+    .warn-item::before { content: '—'; position: absolute; left: 0; opacity: 0.5; }
+    .warn-item:last-child { margin-bottom: 0; }
+
+    /* Badge */
+    .badge { border-radius: 5px; padding: 2px 8px; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; }
+    .badge.long  { background: var(--green-dim); color: var(--green); }
+    .badge.short { background: var(--red-dim);   color: var(--red);   }
+
+    /* Save / action buttons */
+    .save-btn { width: 100%; background: var(--s2); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 14px 0; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; transition: all .2s; margin-top: 4px; }
+    .save-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .save-btn.saved { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+
+    /* Journal stats */
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+    .stat { background: var(--s1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 6px; text-align: center; }
+    .stat-l { font-size: 9px; color: var(--muted); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
+    .stat-v { font-size: 20px; font-weight: 900; }
+
+    /* Journal entry card */
+    .jcard { background: var(--s1); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+    .jcard-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .jsym  { font-weight: 900; font-size: 15px; letter-spacing: -0.3px; }
+    .jres  { font-weight: 700; font-size: 12px; }
+    .jdate { color: var(--muted); font-size: 10px; margin-left: auto; font-weight: 600; letter-spacing: 0.3px; }
+    .jgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .jbox  { background: var(--s2); border-radius: 8px; padding: 9px 10px; }
+    .jbox-l { font-size: 9px; color: var(--muted); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+    .jbox-v { font-size: 14px; font-weight: 700; }
+    .jtps  { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .jtp   { background: var(--green-dim); color: var(--green); border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 700; }
+    .jnote { margin-top: 10px; color: var(--sub); font-size: 12px; border-top: 1px solid var(--border); padding-top: 10px; line-height: 1.6; }
+
+    /* Journal action buttons */
+    .jactions { display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+    .jbtn { flex: 1; background: var(--s2); border: 1px solid var(--border); border-radius: 9px; padding: 9px 0; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; font-family: inherit; transition: all .15s; }
+    .jbtn.edit:active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+    .jbtn.del  { color: var(--red); }
+    .jbtn.del:active  { background: var(--red-dim); border-color: var(--red); }
+
+    /* Edit modal */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: flex-end; backdrop-filter: blur(4px); }
+    .modal { background: var(--s1); border: 1px solid var(--border); border-radius: 20px 20px 0 0; width: 100%; max-width: 430px; margin: 0 auto; padding: 24px 16px 40px; max-height: 85vh; overflow-y: auto; }
+    .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: var(--s2); border: none; color: var(--sub); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { font-size: 11px; font-weight: 600; color: var(--sub); display: block; margin-bottom: 6px; }
+    .modal-field input, .modal-field select { background: var(--s2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 13px 14px; font-size: 16px; width: 100%; outline: none; font-family: inherit; -webkit-appearance: none; }
+    .modal-field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234a5a72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
+    .modal-save { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 15px 0; font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; margin-top: 4px; }
+
+    /* Misc */
+    .tp-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .hidden { display: none !important; }
+    .empty { text-align: center; padding: 56px 20px; }
+    .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-t { color: var(--sub); font-size: 14px; font-weight: 600; }
+    .empty-s { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <span class="hdr-title">TradeCalc</span>
+      <span class="hdr-tag">FUTURES</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab on" id="tab-c-btn" onclick="switchTab('calc')">Calculator</button>
+    <button class="tab"    id="tab-j-btn" onclick="switchTab('journal')">Journal</button>
+  </div>
+
+  <!-- ══════════ CALCULATOR ══════════ -->
+  <div id="tab-calc">
+
+    <div class="dir-row">
+      <button class="dir-btn long on" id="btn-long"  onclick="setDir('long')">▲ &nbsp;Long</button>
+      <button class="dir-btn short"   id="btn-short" onclick="setDir('short')">▼ &nbsp;Short</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Account & Risk</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Account Size ($)</label>
+          <input type="number" inputmode="decimal" id="f-capital" placeholder="1000" oninput="onInput()">
+        </div>
+        <div class="field">
+          <label>Leverage (x)</label>
+          <input type="number" inputmode="decimal" id="f-leverage" placeholder="10" oninput="onInput()">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Risk (%)</label>
+        <div class="risk-row">
+          <input type="number" inputmode="decimal" id="f-risk-pct" placeholder="2" oninput="onInput()">
+          <div class="risk-pill" id="risk-dollar">— $</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Position</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Symbol</label>
+          <input type="text" inputmode="text" id="f-symbol" placeholder="BTCUSDT" oninput="onInput()">
+        </div>
+        <div class="field">
+          <label>Entry Price</label>
+          <input type="number" inputmode="decimal" id="f-entry" placeholder="65000" oninput="onInput()">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Stop Loss</label>
+        <input type="number" inputmode="decimal" id="f-sl" placeholder="63500" oninput="onInput()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Targets (optional)</div>
+      <div class="tp-input-grid">
+        <div class="field" style="margin-bottom:0"><label>TP 1</label><input type="number" inputmode="decimal" id="tp1" placeholder="—" oninput="onInput()"></div>
+        <div class="field" style="margin-bottom:0"><label>TP 2</label><input type="number" inputmode="decimal" id="tp2" placeholder="—" oninput="onInput()"></div>
+        <div class="field" style="margin-bottom:0"><label>TP 3</label><input type="number" inputmode="decimal" id="tp3" placeholder="—" oninput="onInput()"></div>
+        <div class="field" style="margin-bottom:0"><label>TP 4</label><input type="number" inputmode="decimal" id="tp4" placeholder="—" oninput="onInput()"></div>
+        <div class="field" style="margin-bottom:0"><label>TP 5</label><input type="number" inputmode="decimal" id="tp5" placeholder="—" oninput="onInput()"></div>
+        <div class="field" style="margin-bottom:0"><label>TP 6</label><input type="number" inputmode="decimal" id="tp6" placeholder="—" oninput="onInput()"></div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calc()">Calculate</button>
+
+    <!-- Results -->
+    <div id="results" class="hidden">
+
+      <div class="card">
+        <div class="card-title" id="res-title">Results</div>
+        <div id="res-rows"></div>
+      </div>
+
+      <div class="card hidden" id="res-tp-card">
+        <div class="card-title">Targets</div>
+        <div class="tp-hdr">
+          <span class="tph-n">#</span>
+          <span class="tph-p">Price</span>
+          <span class="tph-pr">Profit ($)</span>
+          <span class="tph-rr">R:R</span>
+        </div>
+        <div id="res-tp-rows"></div>
+      </div>
+
+      <div class="warn-card hidden" id="res-warns">
+        <div class="warn-title">⚠ Warnings</div>
+        <div id="res-warn-rows"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Save to Journal</div>
+        <div class="field">
+          <label>Result</label>
+          <select id="j-result">
+            <option value="open">🔄 Open</option>
+            <option value="win">✅ Win</option>
+            <option value="loss">❌ Loss</option>
+            <option value="be">➖ Break Even</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Note</label>
+          <input type="text" id="j-note" placeholder="Entry reason, emotions...">
+        </div>
+        <button class="save-btn" id="save-btn" onclick="saveJournal()">Save Trade</button>
+        <div id="save-hint" class="hidden" style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Enter a symbol first</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════ JOURNAL ══════════ -->
+  <div id="tab-journal" class="hidden">
+    <div id="j-stats" class="hidden">
+      <div class="stats" id="j-stats-grid"></div>
+    </div>
+    <div id="j-empty" class="card empty">
+      <div class="empty-icon">📋</div>
+      <div class="empty-t">Journal is empty</div>
+      <div class="empty-s">Save a trade after calculating</div>
+    </div>
+    <div id="j-list"></div>
+  </div>
+
+</div>
+
+<!-- ══════════ EDIT MODAL ══════════ -->
+<div class="modal-bg hidden" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">
+      Edit Trade
+      <button class="modal-close" onclick="closeModal(null)">✕</button>
+    </div>
+    <div class="modal-field"><label>Symbol</label><input id="m-symbol" type="text"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="modal-field" style="margin-bottom:0"><label>Entry</label><input id="m-entry" type="number" inputmode="decimal"></div>
+      <div class="modal-field" style="margin-bottom:0"><label>Stop Loss</label><input id="m-sl" type="number" inputmode="decimal"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="modal-field" style="margin-bottom:0"><label>Leverage</label><input id="m-leverage" type="number" inputmode="decimal"></div>
+      <div class="modal-field" style="margin-bottom:0"><label>Risk %</label><input id="m-risk" type="number" inputmode="decimal"></div>
+    </div>
+    <div class="modal-field">
+      <label>Result</label>
+      <select id="m-result">
+        <option value="open">🔄 Open</option>
+        <option value="win">✅ Win</option>
+        <option value="loss">❌ Loss</option>
+        <option value="be">➖ Break Even</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Note</label>
+      <input id="m-note" type="text" placeholder="Entry reason, emotions...">
+    </div>
+    <button class="modal-save" onclick="saveEdit()">Save Changes</button>
+  </div>
+</div>
+
+<script>
+const SK = 'tc-journal-v3';
+let dir = 'long';
+let journal = [];
+let editId = null;
+try { journal = JSON.parse(localStorage.getItem(SK) || '[]'); } catch(e) {}
+
+function N(id) { return document.getElementById(id); }
+function fv(id) { return parseFloat(N(id).value) || 0; }
+function sv(id) { return N(id).value.trim(); }
+function fmt(n, d=2) {
+  if (n===undefined||n===null||isNaN(n)) return '—';
+  return (+n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function saveLS() { try { localStorage.setItem(SK, JSON.stringify(journal)); } catch(e) {} }
+
+function setDir(d) {
+  dir = d;
+  N('btn-long').className  = 'dir-btn long'  + (d==='long' ?' on':'');
+  N('btn-short').className = 'dir-btn short' + (d==='short'?' on':'');
+  onInput();
+}
+
+function onInput() {
+  const cap = fv('f-capital'), pct = fv('f-risk-pct');
+  N('risk-dollar').textContent = (cap && pct) ? '$' + fmt(cap * pct / 100) : '— $';
+}
+
+function calc() {
+  const capital  = fv('f-capital');
+  const leverage = fv('f-leverage');
+  const riskPct  = fv('f-risk-pct');
+  const entry    = fv('f-entry');
+  const sl       = fv('f-sl');
+  const symbol   = sv('f-symbol');
+
+  if (!capital || !leverage || !riskPct || !entry || !sl) {
+    alert('Please fill in all main fields.');
+    return;
+  }
+
+  const riskDollar = capital * riskPct / 100;
+  const isLong     = dir === 'long';
+  const slDist     = Math.abs(entry - sl);
+  const slPct      = (slDist / entry) * 100;
+  const posSize    = (riskDollar / slDist) * entry;
+  const posCoins   = posSize / entry;
+  const margin     = posSize / leverage;
+  const riskOfCap  = (riskDollar / capital) * 100;
+  const liqEst     = isLong ? entry*(1 - 1/leverage) : entry*(1 + 1/leverage);
+
+  // Main results
+  const rows = [
+    { l:'Risk ($)',         v:'$'+fmt(riskDollar),      c:'y' },
+    { l:'Position Size',   v:'$'+fmt(posSize),          c:''  },
+    { l:'Size (Coin)',      v:fmt(posCoins,5),           c:''  },
+    { l:'Margin Required', v:'$'+fmt(margin),           c:''  },
+    { l:'SL Distance',     v:fmt(slPct,2)+'%',          c:''  },
+    { l:'Risk of Capital', v:fmt(riskOfCap,2)+'%',      c: riskOfCap>3?'r':'g' },
+    { l:'Est. Liquidation',v:fmt(liqEst,2),             c:'r' },
+  ];
+
+  const badge = `<span class="badge ${dir}">${dir.toUpperCase()}</span>`;
+  N('res-title').innerHTML = 'Results &nbsp;' + badge;
+  N('res-rows').innerHTML = rows.map(r =>
+    `<div class="result-row"><span class="rl">${r.l}</span><span class="rv ${r.c}">${r.v}</span></div>`
+  ).join('');
+
+  // TPs
+  const tpRows = [];
+  for (let i = 1; i <= 6; i++) {
+    const price = fv('tp'+i);
+    if (!price) continue;
+    const dist   = Math.abs(price - entry);
+    const profit = posCoins * dist;
+    const rr     = profit / riskDollar;
+    const rc     = rr>=2?'g':rr>=1.5?'y':'r';
+    tpRows.push(`<div class="tp-row">
+      <span class="tp-n">TP${i}</span>
+      <span class="tp-p">${fmt(price,2)}</span>
+      <span class="tp-pr">+$${fmt(profit,2)}</span>
+      <span class="tp-rr ${rc}">${fmt(rr,2)}R</span>
+    </div>`);
+  }
+  const tpCard = N('res-tp-card');
+  if (tpRows.length) { tpCard.classList.remove('hidden'); N('res-tp-rows').innerHTML = tpRows.join(''); }
+  else tpCard.classList.add('hidden');
+
+  // Warnings
+  const warns = [];
+  if (tpRows.length) {
+    const p1 = fv('tp1');
+    if (p1) { const rr=(posCoins*Math.abs(p1-entry))/riskDollar; if(rr<1.5) warns.push('R:R on TP1 is below 1.5 — worth the risk?'); }
+  }
+  if (slPct < 0.3)       warns.push('Stop loss is very tight — risk of early exit');
+  if (leverage > 20)     warns.push(`Leverage ${leverage}x is high — liquidation risk is elevated`);
+  if (margin > capital*0.5) warns.push('Margin exceeds 50% of account balance');
+  if (!isLong && sl < entry) warns.push('Short stop loss must be above entry');
+  if (isLong  && sl > entry) warns.push('Long stop loss must be below entry');
+
+  const wc = N('res-warns');
+  if (warns.length) { wc.classList.remove('hidden'); N('res-warn-rows').innerHTML = warns.map(w=>`<div class="warn-item">${w}</div>`).join(''); }
+  else wc.classList.add('hidden');
+
+  N('results').classList.remove('hidden');
+  N('results').scrollIntoView({behavior:'smooth', block:'start'});
+
+  const hasSym = !!symbol;
+  N('save-btn').disabled = !hasSym;
+  N('save-hint').classList.toggle('hidden', hasSym);
+}
+
+function saveJournal() {
+  const sym = sv('f-symbol');
+  if (!sym) return;
+  const tps = [];
+  for(let i=1;i<=6;i++) { const v=sv('tp'+i); if(v) tps.push(v); }
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  const e = {
+    id: Date.now(),
+    date: dateStr,
+    symbol: sym.toUpperCase(),
+    dir,
+    entry:    sv('f-entry'),
+    sl:       sv('f-sl'),
+    capital:  sv('f-capital'),
+    leverage: sv('f-leverage'),
+    riskPct:  sv('f-risk-pct'),
+    tps,
+    result:   N('j-result').value,
+    note:     sv('j-note'),
+  };
+
+  journal.unshift(e);
+  saveLS();
+
+  const btn = N('save-btn');
+  btn.textContent = '✅ Saved!';
+  btn.classList.add('saved');
+  N('j-note').value = '';
+  setTimeout(()=>{ btn.textContent='Save Trade'; btn.classList.remove('saved'); }, 2000);
+
+  renderJournal();
+  updateJTab();
+}
+
+// ── Edit modal ──
+function openEdit(id) {
+  const e = journal.find(j=>j.id===id);
+  if (!e) return;
+  editId = id;
+  N('m-symbol').value  = e.symbol;
+  N('m-entry').value   = e.entry;
+  N('m-sl').value      = e.sl;
+  N('m-leverage').value= e.leverage;
+  N('m-risk').value    = e.riskPct;
+  N('m-result').value  = e.result;
+  N('m-note').value    = e.note || '';
+  N('modal-bg').classList.remove('hidden');
+}
+
+function closeModal(ev) {
+  if (ev && ev.target !== N('modal-bg')) return;
+  N('modal-bg').classList.add('hidden');
+  editId = null;
+}
+
+function saveEdit() {
+  if (!editId) return;
+  const idx = journal.findIndex(j=>j.id===editId);
+  if (idx<0) return;
+  journal[idx] = {
+    ...journal[idx],
+    symbol:   N('m-symbol').value.trim().toUpperCase(),
+    entry:    N('m-entry').value.trim(),
+    sl:       N('m-sl').value.trim(),
+    leverage: N('m-leverage').value.trim(),
+    riskPct:  N('m-risk').value.trim(),
+    result:   N('m-result').value,
+    note:     N('m-note').value.trim(),
+  };
+  saveLS();
+  renderJournal();
+  updateJTab();
+  N('modal-bg').classList.add('hidden');
+  editId = null;
+}
+
+function delEntry(id) {
+  if (!confirm('Delete this trade?')) return;
+  journal = journal.filter(e=>e.id!==id);
+  saveLS();
+  renderJournal();
+  updateJTab();
+}
+
+function renderJournal() {
+  const list=N('j-list'), empty=N('j-empty'), stats=N('j-stats');
+  if (!journal.length) {
+    empty.classList.remove('hidden');
+    stats.classList.add('hidden');
+    list.innerHTML='';
+    return;
+  }
+  empty.classList.add('hidden');
+  stats.classList.remove('hidden');
+
+  const wins  = journal.filter(e=>e.result==='win').length;
+  const losses= journal.filter(e=>e.result==='loss').length;
+  const wr    = ((wins/journal.length)*100).toFixed(0);
+  const wrC   = parseInt(wr)>=50?'var(--green)':'var(--red)';
+
+  N('j-stats-grid').innerHTML=`
+    <div class="stat"><div class="stat-l">Total</div><div class="stat-v" style="color:var(--text)">${journal.length}</div></div>
+    <div class="stat"><div class="stat-l">Win%</div><div class="stat-v" style="color:${wrC}">${wr}</div></div>
+    <div class="stat"><div class="stat-l">Wins</div><div class="stat-v" style="color:var(--green)">${wins}</div></div>
+    <div class="stat"><div class="stat-l">Loss</div><div class="stat-v" style="color:var(--red)">${losses}</div></div>
+  `;
+
+  const rl={win:'✅ Win',loss:'❌ Loss',be:'➖ BE',open:'🔄 Open'};
+  const rc={win:'var(--green)',loss:'var(--red)',be:'var(--muted)',open:'var(--sub)'};
+
+  list.innerHTML = journal.map(e=>`
+    <div class="jcard">
+      <div class="jcard-hdr">
+        <span class="jsym">${e.symbol}</span>
+        <span class="badge ${e.dir}">${e.dir.toUpperCase()}</span>
+        <span class="jres" style="color:${rc[e.result]||'var(--sub)'}">${rl[e.result]||e.result}</span>
+        <span class="jdate">${e.date}</span>
+      </div>
+      <div class="jgrid">
+        <div class="jbox"><div class="jbox-l">Entry</div><div class="jbox-v">${fmt(parseFloat(e.entry),2)}</div></div>
+        <div class="jbox"><div class="jbox-l">Stop Loss</div><div class="jbox-v">${fmt(parseFloat(e.sl),2)}</div></div>
+        <div class="jbox"><div class="jbox-l">Leverage</div><div class="jbox-v">${e.leverage}x</div></div>
+        <div class="jbox"><div class="jbox-l">Risk</div><div class="jbox-v">${e.riskPct}%</div></div>
+      </div>
+      ${e.tps && e.tps.length ? `<div class="jtps">${e.tps.map((t,i)=>`<span class="jtp">TP${i+1} · ${fmt(parseFloat(t),2)}</span>`).join('')}</div>` : ''}
+      ${e.note ? `<div class="jnote">${e.note}</div>` : ''}
+      <div class="jactions">
+        <button class="jbtn edit" onclick="openEdit(${e.id})">✏️ Edit</button>
+        <button class="jbtn del"  onclick="delEntry(${e.id})">🗑 Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateJTab() {
+  N('tab-j-btn').textContent = journal.length ? `Journal (${journal.length})` : 'Journal';
+}
+
+function switchTab(t) {
+  N('tab-calc').classList.toggle('hidden',    t!=='calc');
+  N('tab-journal').classList.toggle('hidden', t!=='journal');
+  N('tab-c-btn').classList.toggle('on', t==='calc');
+  N('tab-j-btn').classList.toggle('on', t==='journal');
+}
+
+renderJournal();
+updateJTab();
+</script>
+</body>
+</html>
